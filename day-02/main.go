@@ -13,16 +13,36 @@ import (
 func main() {
 	dat, err := ioutil.ReadFile("input.txt")
 	check(err)
-	program, err := stringToIntArray(string(dat), ",")
-	check(err)
-	
-	var programResult []int
 
-	programResult, err = Intcode.Execute(program)
-	if err != nil {
-		panic(err)
-	} else{
-		fmt.Println(programResult)
+	var program []int
+	program, err = stringToIntArray(string(dat), ",")
+	check(err)
+
+	var programResult []int
+	
+
+	multiplier := 1
+	max := len(program) * multiplier
+
+	// Reading opcodes is for scrubs.  Do a search of the solution space instead.
+	for i:=0; i< max; i++ {
+		for j:= 0;j<max; j++ {
+			program, err = stringToIntArray(string(dat), ",")
+			program[1] = i
+			program[2] = j
+			programResult, err = Intcode.Execute(program)
+			if err != nil {
+				fmt.Println(err)
+			//} else{
+				//fmt.Println(stringToIntArray(string(dat), ","))
+				//fmt.Println(programResult)
+			}
+
+			if programResult[0] == 19690720 {
+				fmt.Println(programResult[:4])
+				return
+			}
+		}
 	}
 }
 
