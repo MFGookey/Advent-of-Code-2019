@@ -69,21 +69,30 @@ func Test_executeAdd(t *testing.T) {
 		program       []int
 	}
 	tests := []struct {
-		name string
-		args args
-		want []int
+		name    string
+		args    args
+		want    []int
+		wantErr bool
 	}{
-		{"Add 1 to first", args{0, 0, 0, []int{1}}, []int{2}},
-		{"Double second", args{1, 1, 1, []int{0, 10}}, []int{0, 20}},
-		{"Add first two, put in third", args{0, 1, 2, []int{7, 9, 0}}, []int{7, 9, 16}},
-		{"Overwrite left", args{0, 1, 0, []int{7, 9, 0}}, []int{16, 9, 0}},
-		{"Overwrite right", args{0, 1, 1, []int{7, 9, 0}}, []int{7, 16, 0}},
-		{"Zero out third left negative", args{0, 1, 2, []int{-9, 9, 1000}}, []int{-9, 9, 0}},
-		{"Zero out third right negative", args{0, 1, 2, []int{9, -9, 1000}}, []int{9, -9, 0}},
+		{"Add 1 to first", args{0, 0, 0, []int{1}}, []int{2}, false},
+		{"Double second", args{1, 1, 1, []int{0, 10}}, []int{0, 20}, false},
+		{"Add first two, put in third", args{0, 1, 2, []int{7, 9, 0}}, []int{7, 9, 16}, false},
+		{"Overwrite left", args{0, 1, 0, []int{7, 9, 0}}, []int{16, 9, 0}, false},
+		{"Overwrite right", args{0, 1, 1, []int{7, 9, 0}}, []int{7, 16, 0}, false},
+		{"Zero out third left negative", args{0, 1, 2, []int{-9, 9, 1000}}, []int{-9, 9, 0}, false},
+		{"Zero out third right negative", args{0, 1, 2, []int{9, -9, 1000}}, []int{9, -9, 0}, false},
+		{"ResultAddress out of range", args{0, 0, 1, []int{1}}, []int{1}, true},
+		{"LeftAddress out of range", args{1, 0, 0, []int{1}}, []int{1}, true},
+		{"RightAddress out of range", args{0, 1, 0, []int{1}}, []int{1}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := executeAdd(tt.args.leftAddress, tt.args.rightAddress, tt.args.resultAddress, tt.args.program); !reflect.DeepEqual(got, tt.want) {
+			got, err := executeAdd(tt.args.leftAddress, tt.args.rightAddress, tt.args.resultAddress, tt.args.program)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("executeAdd() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("executeAdd() = %v, want %v", got, tt.want)
 			}
 		})
@@ -98,26 +107,36 @@ func Test_executeMultiply(t *testing.T) {
 		program       []int
 	}
 	tests := []struct {
-		name string
-		args args
-		want []int
+		name    string
+		args    args
+		want    []int
+		wantErr bool
 	}{
-		{"Square first - identity", args{0, 0, 0, []int{1}}, []int{1}},
-		{"Square square - nonidentity", args{0, 0, 0, []int{2}}, []int{4}},
-		{"Double second", args{0, 1, 1, []int{2, 10}}, []int{2, 20}},
-		{"Triple second", args{0, 1, 1, []int{3, 10}}, []int{3, 30}},
-		{"Multiply first two, put in third", args{0, 1, 2, []int{7, 9, 0}}, []int{7, 9, 63}},
-		{"Overwrite left", args{0, 1, 0, []int{7, 9, 0}}, []int{63, 9, 0}},
-		{"Overwrite right", args{0, 1, 1, []int{7, 9, 0}}, []int{7, 63, 0}},
-		{"Zero out third left zero", args{0, 1, 2, []int{0, 9, 1000}}, []int{0, 9, 0}},
-		{"Zero out third right zero", args{0, 1, 2, []int{9, 0, 1000}}, []int{9, 0, 0}},
-		{"Zero out third both zero", args{0, 1, 2, []int{0, 0, 1000}}, []int{0, 0, 0}},
-		{"Negate left", args{0, 1, 0, []int{10, -1, 1000}}, []int{-10, -1, 1000}},
-		{"Negate right", args{0, 1, 1, []int{-1, -10, 1000}}, []int{-1, 10, 1000}},
+		{"Square first - identity", args{0, 0, 0, []int{1}}, []int{1}, false},
+		{"Square square - nonidentity", args{0, 0, 0, []int{2}}, []int{4}, false},
+		{"Double second", args{0, 1, 1, []int{2, 10}}, []int{2, 20}, false},
+		{"Triple second", args{0, 1, 1, []int{3, 10}}, []int{3, 30}, false},
+		{"Multiply first two, put in third", args{0, 1, 2, []int{7, 9, 0}}, []int{7, 9, 63}, false},
+		{"Overwrite left", args{0, 1, 0, []int{7, 9, 0}}, []int{63, 9, 0}, false},
+		{"Overwrite right", args{0, 1, 1, []int{7, 9, 0}}, []int{7, 63, 0}, false},
+		{"Zero out third left zero", args{0, 1, 2, []int{0, 9, 1000}}, []int{0, 9, 0}, false},
+		{"Zero out third right zero", args{0, 1, 2, []int{9, 0, 1000}}, []int{9, 0, 0}, false},
+		{"Zero out third both zero", args{0, 1, 2, []int{0, 0, 1000}}, []int{0, 0, 0}, false},
+		{"Negate left", args{0, 1, 0, []int{10, -1, 1000}}, []int{-10, -1, 1000}, false},
+		{"Negate right", args{0, 1, 1, []int{-1, -10, 1000}}, []int{-1, 10, 1000}, false},
+		{"ResultAddress out of range", args{0, 0, 1, []int{1}}, []int{1}, true},
+		{"LeftAddress out of range", args{1, 0, 0, []int{1}}, []int{1}, true},
+		{"RightAddress out of range", args{0, 1, 0, []int{1}}, []int{1}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := executeMultiply(tt.args.leftAddress, tt.args.rightAddress, tt.args.resultAddress, tt.args.program); !reflect.DeepEqual(got, tt.want) {
+			got, err := executeMultiply(tt.args.leftAddress, tt.args.rightAddress, tt.args.resultAddress, tt.args.program)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("executeMultiply() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("executeMultiply() = %v, want %v", got, tt.want)
 			}
 		})
