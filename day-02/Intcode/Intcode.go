@@ -9,8 +9,8 @@ func Execute(program []int) ([]int, error) {
 	var halted bool = false
 	var err error
 	for programCounter := 0; halted == false && err == nil; programCounter++ {
-		fmt.Printf("Program Counter: %d, halted: %v\n", programCounter, halted)
-		fmt.Println(program)
+		//fmt.Printf("Program Counter: %d, halted: %v\n", programCounter, halted)
+		//fmt.Println(program)
 		program, halted, err = executeStep(programCounter, program)
 
 		if err != nil {
@@ -23,6 +23,8 @@ func Execute(program []int) ([]int, error) {
 
 func executeStep(programCounter int, program []int) ([]int, bool, error) {
 	var instruction []int
+	var executeResult []int
+	var err error
 	instructionTypicalLength := 4
 
 	if programCounter*instructionTypicalLength > len(program) {
@@ -34,39 +36,75 @@ func executeStep(programCounter int, program []int) ([]int, bool, error) {
 	} else {
 		instruction = program[programCounter*instructionTypicalLength : programCounter*instructionTypicalLength+instructionTypicalLength]
 	}
-	fmt.Println(instruction)
+
+	//fmt.Println(instruction)
+
 	if instruction[0] == 99 {
-		fmt.Println("halting")
+		//fmt.Println("halting")
 		return program, true, nil
 	}
 
 	if len(instruction) == instructionTypicalLength {
 		switch instruction[0] {
 		case 1:
-			return executeAdd(instruction[1], instruction[2], instruction[3], program), false, nil
+			executeResult, err = executeAdd(instruction[1], instruction[2], instruction[3], program)
+			break
 		case 2:
-			return executeMultiply(instruction[1], instruction[2], instruction[3], program), false, nil
+			executeResult, err = executeMultiply(instruction[1], instruction[2], instruction[3], program)
+			break
 		default:
-			return program, true, fmt.Errorf("unknown opcode at instruction %d: %d", programCounter, instruction[0])
+			err = fmt.Errorf("unknown opcode at instruction %d: %d", programCounter, instruction[0])
 		}
-	} else {
-		return program, true, fmt.Errorf("Instruction %v is not of an expected length", instruction)
+
+		var forceHalt bool
+
+		forceHalt = (err != nil)
+
+		return executeResult, forceHalt, err
 	}
+
+	return program, true, fmt.Errorf("Instruction %v is not of an expected length", instruction)
 }
 
-func executeAdd(leftAddress int, rightAddress int, resultAddress int, program []int) []int {
+func executeAdd(leftAddress int, rightAddress int, resultAddress int, program []int) ([]int, error) {
+	if leftAddress >= len(program) {
+		return program, fmt.Errorf("leftAddress %d is not within memory", leftAddress)
+	}
+
+	if rightAddress >= len(program) {
+		return program, fmt.Errorf("rightAddress %d is not within memory", rightAddress)
+	}
+
+	if resultAddress >= len(program) {
+		return program, fmt.Errorf("resultAddress %d is not within memory", resultAddress)
+	}
+
 	result := add(program[leftAddress], program[rightAddress])
-	fmt.Printf("Adding: %d + %d = %d, storing to %d\n", program[leftAddress], program[rightAddress], result, resultAddress)
+	//fmt.Printf("Adding: %d + %d = %d, storing to %d\n", program[leftAddress], program[rightAddress], result, resultAddress)
+
 	program[resultAddress] = result
-	return program
+	return program, nil
 }
 
-func executeMultiply(leftAddress int, rightAddress int, resultAddress int, program []int) []int {
+func executeMultiply(leftAddress int, rightAddress int, resultAddress int, program []int) ([]int, error) {
+	if leftAddress >= len(program) {
+		return program, fmt.Errorf("leftAddress %d is not within memory", leftAddress)
+	}
+
+	if rightAddress >= len(program) {
+		return program, fmt.Errorf("rightAddress %d is not within memory", rightAddress)
+	}
+
+	if resultAddress >= len(program) {
+		return program, fmt.Errorf("resultAddress %d is not within memory", resultAddress)
+	}
+
 	result := multiply(program[leftAddress], program[rightAddress])
-	fmt.Printf("Multiplying: %d * %d = %d, storing to %d\n", program[leftAddress], program[rightAddress], result, resultAddress)
+	//fmt.Printf("Multiplying: %d * %d = %d, storing to %d\n", program[leftAddress], program[rightAddress], result, resultAddress)
+
 	program[resultAddress] = result
 
-	return program
+	return program, nil
 }
 
 func add(left int, right int) int {
