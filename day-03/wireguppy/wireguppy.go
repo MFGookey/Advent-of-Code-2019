@@ -187,3 +187,14 @@ func FindCommonCoordinates(list1 []Coordinate, list2 []Coordinate) []Coordinate 
 
 	return common
 }
+
+// FindFirstIndex Find the index of a coordinate in a wire
+func FindFirstIndex(wire []Coordinate, coordinate Coordinate) (int, error) {
+	for index, wireCoordinate := range wire {
+		if wireCoordinate.X == coordinate.X && wireCoordinate.Y == coordinate.Y {
+			return index + 2, nil
+		}
+	}
+
+	return -1, fmt.Errorf("Could not find coordinate %v in wire %v", coordinate, wire)
+}

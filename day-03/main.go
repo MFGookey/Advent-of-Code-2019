@@ -30,10 +30,27 @@ func main() {
 
 	fmt.Println(common)
 
-	smallest := guppy.CalculateManhattanFromOrigin(common[0])
-	var current int
+	var smallest int
+	current := 0
+
+	for _, wire := range wiresCoordinates {
+		temp, err := guppy.FindFirstIndex(wire, common[0])
+		check(err)
+		// Add 1 because index is 0 based
+		current = current + temp + 1
+	}
+
+	smallest = current
+
 	for _, coordinate := range common {
-		current = guppy.CalculateManhattanFromOrigin(coordinate)
+		current = 0
+		for _, wire := range wiresCoordinates {
+			temp, err := guppy.FindFirstIndex(wire, coordinate)
+			check(err)
+			// Add 1 because temp is 0 based
+			current = current + temp + 1
+		}
+
 		if current < smallest {
 			smallest = current
 		}
