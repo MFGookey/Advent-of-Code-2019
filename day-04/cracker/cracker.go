@@ -14,7 +14,7 @@ func CountPasswords(lowBoundary int, highBoundary int) (int, error) {
 			return 0, err
 		}
 
-		if checkLength(digits, 6) && checkRange(i, lowBoundary, highBoundary) && checkDoubleDigits(digits) && checkNoDescending(digits) {
+		if checkLength(digits, 6) && checkRange(i, lowBoundary, highBoundary) && checkDoubleDigits(digits) && checkNoDescending(digits) && checkTwoDigitRepeat(digits) {
 			count++
 		}
 	}
@@ -76,4 +76,24 @@ func checkNoDescending(candidate []int) bool {
 	}
 
 	return true
+}
+
+func checkTwoDigitRepeat(candidate []int) bool {
+	lastSeen := -1
+	run := 1
+
+	for _, currentDigit := range candidate {
+		if currentDigit == lastSeen {
+			run++
+		} else {
+			if run == 2 {
+				return true
+			}
+
+			lastSeen = currentDigit
+			run = 1
+		}
+	}
+
+	return run == 2
 }
